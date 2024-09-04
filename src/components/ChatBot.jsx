@@ -62,7 +62,7 @@ const ChatBot = () => {
 
       setMessages((messages) => [
         ...messages,
-        { id: Date.now() + 1, text: formattedReply, sender: "bot", timestamp: new Date().toLocaleTimeString() },
+        { id: Date.now() + 1, text: formattedReply, sender: "bot", timestamp: formatTime(new Date()) },
       ]);
     } catch (error) {
       console.error("Error fetching bot response:", error);
@@ -135,8 +135,8 @@ const ChatBot = () => {
       {/* Typing Indicator */}
       {isTyping && (
         <div className="flex justify-start mb-2">
-          <div className="max-w-lg px-4 py-3 rounded-lg text-white bg-[#0b2747]">
-            <p>Typing...</p>
+          <div className="px-4 py-3">
+          <iframe className="w-20" src="https://lottie.host/embed/92a4e366-f069-4b51-a1ee-14a816aec9f7/UfF37PYCIw.json"></iframe>
           </div>
         </div>
       )}
