@@ -49,7 +49,7 @@ const ChatBot = () => {
     setIsTyping(true); // show typing indicator
 
     try {
-      const response = await fetch("http://localhost:3001/api/chat", {
+      const response = await fetch("https://fixit-bot-server.onrender.com/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
