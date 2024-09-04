@@ -1,5 +1,5 @@
 // src/components/ChatBot.jsx
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import robotIcon from "../assets/icons/robot-icon.svg";
 import sendIcon from "../assets/icons/send-icon.svg";
 
@@ -16,6 +16,23 @@ const ChatBot = () => {
   const [showQuickResponses, setShowQuickResponses] = useState(true);
   const [isTyping, setIsTyping] = useState(false); // New state to indicate typing
 
+  // Ref to the chat container
+  const chatContainerRef = useRef(null);
+
+  // Smooth scroll to the bottom
+  const scrollToBottomSmooth = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  };
+
+    // useEffect to scroll to the bottom whenever messages or isTyping change
+    useEffect(() => {
+      scrollToBottomSmooth();
+    }, [messages, isTyping]);
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -128,8 +145,20 @@ const ChatBot = () => {
       </div>
 
       {/* Chat messages area */}
-      <div className="flex-1 overflow-y-auto p-4 bg-primary">
-        {messages.map((msg) => renderMessage(msg))}
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-4 bg-primary">
+        {messages.map((msg) => (
+          <div
+            key={msg.id}
+            className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}
+          >
+            <div
+              className={`max-w-lg px-4 py-3 rounded-lg ${msg.sender === "user" ? "bg-[#0b2747] text-white" : "text-white"} break-words`}
+            >
+              <p dangerouslySetInnerHTML={{ __html: msg.text }}></p>
+              <p className="text-xs text-gray-300 mt-1 flex justify-end">{msg.timestamp}</p>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Typing Indicator */}
@@ -157,7 +186,7 @@ const ChatBot = () => {
       )}
 
       {/* Input field and Send button */}
-      <div className="mt-4 flex items-center justify-center gap-2">
+      <div className="mt-4 flex items-center justify-center gap-2 bg-primary sticky bottom-0">
         <input
           type="text"
           className="flex-1 px-6 py-4 rounded-full bg-[#0b2747] text-white focus:outline-none"
