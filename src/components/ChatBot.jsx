@@ -1,6 +1,7 @@
 // src/components/ChatBot.jsx
 import { useState } from "react";
 import robotIcon from "../assets/icons/robot-icon.svg";
+import sendIcon from "../assets/icons/send-icon.svg";
 
 const ChatBot = () => {
 
@@ -13,6 +14,8 @@ const ChatBot = () => {
   ]);
   const [input, setInput] = useState("");
   const [showQuickResponses, setShowQuickResponses] = useState(true);
+  const [isTyping, setIsTyping] = useState(false); // New state to indicate typing
+
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -43,9 +46,10 @@ const ChatBot = () => {
     const newMessage = { id: Date.now(), text: trimmedMessage, sender: "user", timestamp: formatTime(new Date()) };
     setMessages((messages) => [...messages, newMessage]);
     setInput("");
+    setIsTyping(true); // show typing indicator
 
     try {
-      const response = await fetch("/api/chat", {
+      const response = await fetch("http://localhost:3001/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,34 +66,52 @@ const ChatBot = () => {
       ]);
     } catch (error) {
       console.error("Error fetching bot response:", error);
+    } finally {
+      setIsTyping(false); // Hide typing indicator after receiving the response
     }
   };
 
-  // Format bot response text with HTML elements
   const formatText = (text) => {
+    // Replace **bold** text with <strong> tags
     let formattedText = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    formattedText = formattedText
-      .split("\n")
-      .map((line) => {
-        if (line.trim().startsWith("* ")) {
-          return `<li>${line.trim().substring(2)}</li>`;
+  
+    // Split text by newline to handle each line separately
+    const lines = formattedText.split("\n").map((line) => line.trim());
+  
+    // Initialize a formatted array
+    let formattedLines = [];
+    let listItems = [];
+  
+    lines.forEach((line) => {
+      if (line.startsWith("* ")) {
+        // If it's a list item, add it to listItems array
+        listItems.push(`<li>${line.substring(2)}</li>`);
+      } else {
+        if (listItems.length) {
+          // If we have accumulated list items, close the list and reset it
+          formattedLines.push(`<ul>${listItems.join("")}</ul>`);
+          listItems = [];
         }
-        return line;
-      })
-      .join("\n");
-
-    if (formattedText.includes("<li>")) {
-      formattedText = `<ul>${formattedText}</ul>`;
+        // Push regular lines as paragraphs with <br> at the end
+        formattedLines.push(`${line}<br/>`);
+      }
+    });
+  
+    // If there are any remaining list items, add them to formatted lines
+    if (listItems.length) {
+      formattedLines.push(`<ul>${listItems.join("")}</ul>`);
     }
-
-    return formattedText;
+  
+    // Join all formatted lines into a single string
+    return formattedLines.join("");
   };
+  
 
   // Render formatted or plain messages
   const renderMessage = (msg) => {
     return (
       <div key={msg.id} className={`flex ${msg.sender === "user" ? "justify-end" : "justify-start"} mb-2`}>
-        <div className={`max-w-xs px-4 py-3 rounded-lg ${msg.sender === "user" ? "bg-[#0b2747] text-white" : "text-white"} break-words`}>
+        <div className={`max-w-lg px-4 py-3 rounded-lg ${msg.sender === "user" ? "bg-[#0b2747] text-white" : "text-white"} break-words`}>
           <p dangerouslySetInnerHTML={{ __html: msg.text }}></p>
           <p className="text-xs text-gray-300 mt-1 flex justify-end">{msg.timestamp}</p>
         </div>
@@ -110,6 +132,15 @@ const ChatBot = () => {
         {messages.map((msg) => renderMessage(msg))}
       </div>
 
+      {/* Typing Indicator */}
+      {isTyping && (
+        <div className="flex justify-start mb-2">
+          <div className="max-w-lg px-4 py-3 rounded-lg text-white bg-[#0b2747]">
+            <p>Typing...</p>
+          </div>
+        </div>
+      )}
+
       {/* Quick Responses */}
       {showQuickResponses && (
         <div className="flex flex-col md:flex-row justify-center gap-3 py-2 my-6">
@@ -126,20 +157,20 @@ const ChatBot = () => {
       )}
 
       {/* Input field and Send button */}
-      <div className="mt-4 flex items-center">
+      <div className="mt-4 flex items-center justify-center gap-2">
         <input
           type="text"
-          className="flex-1 p-4 rounded-lg bg-[#0b2747] text-white focus:outline-none"
+          className="flex-1 px-6 py-4 rounded-full bg-[#0b2747] text-white focus:outline-none"
           placeholder="Type your message..."
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
         />
         <button
-          className="ml-2 px-11 py-4 bg-[#0F3460] hover:bg-[#123d73] text-white rounded-lg"
+          className="p-4 bg-[#0F3460] hover:bg-[#123d73] text-white rounded-full"
           onClick={() => sendMessage(input)}
         >
-          Send
+          <img src={sendIcon} className="w-6" alt="" />
         </button>
       </div>
     </div>
