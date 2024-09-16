@@ -57,26 +57,26 @@ const ChatBot = () => {
   const sendMessage = async (message) => {
     const trimmedMessage = message.trim();
     if (!trimmedMessage) return;
-
+  
     setShowQuickResponses(false);
-
     const newMessage = { id: Date.now(), text: trimmedMessage, sender: "user", timestamp: formatTime(new Date()) };
     setMessages((messages) => [...messages, newMessage]);
     setInput("");
     setIsTyping(true); // show typing indicator
-
+  
     try {
-      const response = await fetch("https://fixit-bot-server.onrender.com/api/chat", {
+      const response = await fetch("http://localhost:3001/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ message: trimmedMessage }),
       });
-
-      const { reply } = await response.json();
+  
+      const data = await response.json();
+      const reply = data.reply || ""; // Ensure reply is defined
       const formattedReply = formatText(reply);
-
+  
       setMessages((messages) => [
         ...messages,
         { id: Date.now() + 1, text: formattedReply, sender: "bot", timestamp: formatTime(new Date()) },
@@ -87,6 +87,7 @@ const ChatBot = () => {
       setIsTyping(false); // Hide typing indicator after receiving the response
     }
   };
+  
 
   const formatText = (text) => {
     // Replace **bold** text with <strong> tags
